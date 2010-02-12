@@ -1,5 +1,18 @@
 """
+Simple wrapper-lib for accessing the Posterous API via python.
+See http://posterous.com/api
+
+Copyright:
+    Copyright (c) 2010, Benjamin Reitzammer <http://github.com/nureineide>, All rights reserved.
+    
+License:
+    This program is free software. You can distribute/modify this program under 
+    the terms of the Apache License Version 2.0 available at
+    http://www.apache.org/licenses/LICENSE-2.0.txt 
 """
+
+__author__ = "Benjamin Reitzammer <http://github.com/nureineide>"
+__version__ = "0.1"
 
 from base64 import b64encode
 from copy import copy
@@ -10,7 +23,7 @@ import urllib2, urllib
 
 
 class Posterous(object):
-    """docstring for Posterous"""
+    """ """
     
     urls = {
         'sites': 'https://posterous.com/api/getsites',
@@ -37,10 +50,12 @@ class Posterous(object):
         return urllib2.urlopen(req).read()
             
     def get_posts(self, site_id):
+        """ returns a list of Post objects, may be an empty list """
         logging.info("Trying to get posts for Site ID '%s'" % site_id)
         return parse_posts_xml( self._get(self.urls['readposts'], {'site_id': str(site_id)}) )
     
     def get_sites(self):
+        """ returns a list of Site objects, may be an empty list """
         logging.info("Trying to get all sites information")
         return parse_sites_xml( self._get(self.urls['sites']) )
         
