@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rsp stat="ok">  
+    <post>  
+        <url>http://post.ly/abc123</url>  
+        <link>http://sachin.posterous.com/brunch-in-san-francisco</link>  
+        <title>Brunch in San Francisco</title>  
+        <id>55</id>  
+        <body>What a great brunch!</body>  
+        <date>Sun, 03 May 2009 19:58:58 -0800</date>  
+        <views>0</views>  
+        <private>false</private>  
+        <author>sachin agarwal</author>  
+        <authorpic>http://debug2.posterous.com/user_profile_pics/16071/Picture_1_thumb.png</authorpic>  
+        <commentsenabled>true</commentsenabled>  
+        <media>  
+            <type>image</type>  
+            <medium>  
+                <url>http://posterous.com/getfile/files.posterous.com/sachin/DIptatiCkiv/IMG_0477.scaled500.jpg</url>  
+                <filesize>47</filesize>  
+                <height>333</height>  
+                <width>500</width>   
+            </medium>  
+            <thumb>  
+                <url>http://posterous.com/getfile/files.posterous.com/sachin/DIptatiCkiv/IMG_0477.thumb.jpg</url>  
+                <filesize>5</filesize>  
+                <height>36</height>  
+                <width>36</width>        
+            </thumb>      
+        </media>  
+        <media>  
+            <type>audio</type>  
+            <url>http://posterous.com/getfile/files.posterous.com/sachin/DIptatiCkiv/sheila.mp3</url>  
+            <filesize>10116</filesize>  
+            <artist>Smashing Pumpkins</artist>  
+            <album>Adore</album>  
+            <song>To Sheila</song>     
+        </media>  
+        <media>  
+            <type>video</type>  
+            <url>http://posterous.com/getfile/files.posterous.com/sachin/DIptatiCkiv/movie.avi</url>  
+            <filesize>6537</filesize>  
+            <thumb>http://posterous.com/getfile/files.posterous.com/sachin/DIptatiCkiv/movie.png</thumb>  
+            <flv>http://posterous.com/getfile/files.posterous.com/sachin/DIptatiCkiv/movie.flv</flv>
+            <mp4>http://posterous.com/getfile/files.posterous.com/sachin/DIptatiCkiv/movie.mp4</mp4>
+        </media>  
+        <commentscount>1</commentscount>  
+        <comment>  
+            <body>This is a comment</body>  
+            <date>Thu, 04 Jun 2009 01:33:43 -0800</date>  
+            <author>sachin</author>  
+            <authorpic>http://debug2.posterous.com/user_profile_pics/16071/Picture_1_thumb.png</authorpic>      
+        </comment>
+    </post>
+    <post>
+        <url>http://post.ly/xxxx</url>
+        <link>http://nureineide.posterous.com/touchtable</link>
+        <title>Touchtable</title>
+        <id>10529618</id>
+        <body><![CDATA[<a href="http://nuigroup.com/log/the_unituio_project/#When">http://nuigroup.com/log/the_unituio_project/#When</a>:11:45:00Z <br />Wird Zeit einen Tisch zu haben :)]]></body>
+        <date>Mon, 25 Jan 2010 00:00:20 -0800</date>
+        <views>66</views>
+        <private>false</private>
+        <commentsenabled>true</commentsenabled>
+        <commentsCount>2</commentsCount>
+        <comment>
+            <body><![CDATA[Schick ... aber das kannst du doch noch h\xc3\xbcbscher :)]]></body>
+            <date>Mon, 25 Jan 2010 01:07:33 -0800</date>
+            <author>Benjamin</author>
+            <authorpic>http://files.posterous.com/user_profile_pics/242405/head9_thumb.jpg</authorpic>
+        </comment>
+        <comment>
+            <body><![CDATA[Wart ab :)]]></body>
+            <date>Mon, 25 Jan 2010 01:48:52 -0800</date>
+            <author>test</author>
+        </comment>
+    </post>
+    <post>
+        <url>http://post.ly/KR6f</url>
+        <link>http://nureineide.posterous.com/original-art-mauricio-anzeri-collections-from</link>
+        <title>Original Art: Mauricio Anzeri - collections from the last place \t</title>
+        <id>10537108</id>
+        <body><![CDATA[<div class="posterous_bookmarklet_entry">      <a href="http://marissa.posterous.com/mauricio-anzeri"><img class="posterous_download_image" src="http://posterous.com/getfile/files.posterous.com/marissa/zrLlaWMb1vetsVOD1MpSwc5bRy30JRVMkKy9QP87nFWPWyknMjuUkCYY65L4/anzeri4.jpg" border="0" height="427" width="316" /></a>\r\r<div class="posterous_quote_citation">via <a href="http://marissa.posterous.com/mauricio-anzeri">marissa.posterous.com</a></div>    <p>Stunning!</p></div>]]></body>
+        <date>Mon, 25 Jan 2010 03:23:32 -0800</date>
+        <views>62</views>
+        <private>false</private>
+        <author>Benjamin</author>
+        <authorpic>http://files.posterous.com/user_profile_pics/242405/head9_thumb.jpg</authorpic>
+        <commentsenabled>true</commentsenabled>
+        <commentsCount>0</commentsCount>
+    </post>
+    <post>
+        <url>http://post.ly/NHro</url>
+        <link>http://nureineide.posterous.com/hardgraft-did-you-know-the-3fold-has-been-fea</link>
+        <title>@hardgraft Did you know the 3Fold has been featured in the latest FastCompany issue? (correct link this time)</title>
+        <id>11502888</id>
+        <body><![CDATA[<p><a href=\'http://posterous.com/getfile/files.posterous.com/nureineide/kxviCrDsuwFxzzHqkdEAnFJjcJHGoekJEaiBaumxtegClIAlkznCzcbnzhat/image.jpg.scaled1000.jpg\'><img src="http://posterous.com/getfile/files.posterous.com/nureineide/kxviCrDsuwFxzzHqkdEAnFJjcJHGoekJEaiBaumxtegClIAlkznCzcbnzhat/image.jpg.scaled500.jpg" width="500" height="667"/></a></p><div class="posterous_quote_citation">via tweetie</div>]]></body>
+        <date>Thu, 11 Feb 2010 00:52:22 -0800</date>
+        <views>51</views>
+        <private>false</private>
+        <author>Benjamin</author>
+        <authorpic>http://files.posterous.com/user_profile_pics/242405/head9_thumb.jpg</authorpic>
+        <commentsenabled>true</commentsenabled>
+        <media>
+            <type>image</type>
+            <medium>
+                <url>http://posterous.com/getfile/files.posterous.com/nureineide/kxviCrDsuwFxzzHqkdEAnFJjcJHGoekJEaiBaumxtegClIAlkznCzcbnzhat/image.jpg.scaled500.jpg</url>
+                <filesize>69</filesize>
+                <height>667</height>
+                <width>500</width>
+            </medium>
+            <thumb>
+                <url>http://posterous.com/getfile/files.posterous.com/nureineide/kxviCrDsuwFxzzHqkdEAnFJjcJHGoekJEaiBaumxtegClIAlkznCzcbnzhat/image.jpg.thumb.jpg</url>
+                <filesize>1</filesize>
+                <height>36</height>
+                <width>36</width>
+            </thumb>
+        </media>
+        <commentsCount>0</commentsCount>
+    </post>    
+</rsp>

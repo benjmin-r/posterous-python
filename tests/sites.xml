@@ -1,0 +1,22 @@
+<rsp stat="ok">  
+    <site>  
+        <id>1</id>  
+        <name>Sachin Agarwal's Posterous</name>  
+        <url>http://sachin.posterous.com</url>  
+        <hostname>sachin</hostname>
+        <private>false</private>  
+        <primary>true</primary>  
+        <commentsenabled>true</commentsenabled>  
+        <num_posts>50</num_posts>  
+    </site>
+    <site>  
+        <id>2</id>  
+        <name>Agarwal's Posterous</name>  
+        <url>http://agarwal.posterous.com</url>  
+        <hostname>agarwal</hostname>
+        <private>true</private>  
+        <primary>false</primary>  
+        <commentsenabled>true</commentsenabled>  
+        <num_posts>40</num_posts>  
+    </site>  
+</rsp>
