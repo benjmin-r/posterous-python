@@ -37,7 +37,7 @@ class Posterous(object):
         
     def _enc_utf8(self, s):
         """ Convenience func for encoding a string in utf8 """
-        return s.encode('utf8')  
+        return str(s).encode('utf8')  
 
     def _build_url(self, url, data):
         return '%s?%s' % (url, urllib.urlencode( [ (self._enc_utf8(k), self._enc_utf8(v)) for (k, v) in data.items() ] ))
@@ -48,14 +48,40 @@ class Posterous(object):
                 { "Authorization" : "Basic %s" % b64encode("%s:%s" % (self.username, self.password)) }
             )
         return urllib2.urlopen(req).read()
+        
+    def get_posts(self, *args, **kw):
+        """ 
+        Invokes the 'readposts' method of the Posterous API.
+        
+        Simply pipes through arguments to the Posterous API. This means, that 
+        the names of the arguments passed to this method must correspond with the variable names
+        accepted by the Posterous API for the 'readposts' call.
+        
+        Currently these are the following:
+            "site_id" - Optional. Id of the site to read from
+            "hostname" - Optional. Subdomain of the site to read from
+            "num_posts" - Optional. How many posts you want. Default is 10, max is 50
+            "page" - Optional. What 'page' you want (based on num_posts). Default is 1
+            "tag" - Optional
+        
+        No validation is done on the arguments. This means, the method doesn't care if an
+        invalid value like a negative num_posts is provided. It's the responsibility of the 
+        caller to provide correct values
+        
+        See http://posterous.com/api/reading for more details
+        
+        Returns a list of Post objects, may be an empty list 
+        """
+        logging.info("Trying to get posts with params: '%s'" % str(kw))
+        return parse_posts_xml(self._get(self.urls['readposts'], kw))
             
-    def get_posts(self, site_id):
-        """ returns a list of Post objects, may be an empty list """
-        logging.info("Trying to get posts for Site ID '%s'" % site_id)
-        return parse_posts_xml( self._get(self.urls['readposts'], {'site_id': str(site_id)}) )
-    
     def get_sites(self):
-        """ returns a list of Site objects, may be an empty list """
+        """ 
+        Invokes the 'getsites' method of the Posterous API.        
+        See http://posterous.com/api/reading for more details
+        
+        Returns a list of Site objects, may be an empty list
+        """
         logging.info("Trying to get all sites information")
         return parse_sites_xml( self._get(self.urls['sites']) )
         
