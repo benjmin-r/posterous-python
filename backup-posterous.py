@@ -29,7 +29,7 @@ if __name__ == '__main__':
         Create a folder structure where 
         /{options.folder}
             /{site.hostname}
-                site.json
+                site-{site.hostname}.json
                 {post-slug}.json  <-- contains body & comments & everything else
                 {post-slug}_media{num}
     """
@@ -61,6 +61,11 @@ if __name__ == '__main__':
         logging.info("Creating folder '%s' for site '%s'" % (site_folder, site.id))
         if not os.path.exists(site_folder):
             os.makedirs(site_folder)
+
+        site_file = os.path.join(site_folder, 'site-%s.json' % site.hostname)
+        logging.debug(u"Opening file '%s' for site '%s' (%s)" % (site_file, site.hostname, site.id))
+        with open(site_file, 'w+') as sf:
+            simplejson.dump(site, sf, cls=JsonDateEncoder)
             
         page_numbers = range(1, int(site.num_posts/options.batch_size)+ (2 if site.num_posts % options.batch_size > 0 else 1))
         for page in page_numbers:
