@@ -18,7 +18,7 @@ from base64 import b64encode
 from copy import copy
 import xml.parsers.expat
 import logging 
-from datetime import datetime
+from datetime import datetime, timedelta
 import urllib2, urllib
 
 
@@ -90,8 +90,19 @@ class Posterous(object):
 ### Everything related to parsing responses
 ###
 
-DATE_FORMAT = '%a, %d %b %Y %H:%M:%S -0800'
+DATE_FORMAT = '%a, %d %b %Y %H:%M:%S'
 
+def parse_date(value):
+    try:
+        # parse timezone manually & then calculate local time manually 
+        offset = int(value[-5:])
+        t = datetime.strptime(value[:-6], DATE_FORMAT)
+        return t - timedelta(hours = offset / 100)
+    except:
+        logging.error("Error while manually parsing TZ info in date '%s'" % value)
+        return None
+        
+        
 def type_converter(tagname, value):
     def parse_bool(s):
         if s.lower() == 'true':return True
@@ -111,7 +122,7 @@ def type_converter(tagname, value):
             'private': parse_bool,
             'primary': parse_bool,
             'commentsenabled': parse_bool,
-            'date': lambda v: datetime.strptime(v, DATE_FORMAT)
+            'date': parse_date
         }
     return converter_map[tagname](value) if tagname in converter_map else value
 

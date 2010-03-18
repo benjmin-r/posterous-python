@@ -1,7 +1,11 @@
 
+import sys
+sys.path.append("..")
+
 from datetime import datetime 
 import os.path
 import posterous
+
 
 def get_file_name(n):
     return os.path.join(os.path.dirname( os.path.realpath( __file__ ) ), n)
@@ -37,12 +41,12 @@ def test_post_xml_parser():
         assert p.commentsenabled == True
         assert p.link == 'http://sachin.posterous.com/brunch-in-san-francisco'
         assert p.authorpic == 'http://debug2.posterous.com/user_profile_pics/16071/Picture_1_thumb.png'
-        assert p.date == datetime.strptime('Sun, 03 May 2009 19:58:58 -0800', posterous.DATE_FORMAT)
+        assert p.date == posterous.parse_date('Sun, 03 May 2009 19:58:58 -0800')
         
         assert len(p.comments) == 1
         assert p.comments[0].body == 'This is a comment'
         assert p.comments[0].author == 'sachin'
-        assert p.comments[0].date == datetime.strptime('Thu, 04 Jun 2009 01:33:43 -0800', posterous.DATE_FORMAT)
+        assert p.comments[0].date == posterous.parse_date('Thu, 04 Jun 2009 01:33:43 -0800')
         
         assert len(p.media) == 3
         img = p.media[0]
