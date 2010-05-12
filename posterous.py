@@ -25,9 +25,12 @@ import urllib2, urllib
 class Posterous(object):
     """ """
     
-    urls = {
-        'sites': 'https://posterous.com/api/getsites',
-        'readposts': 'https://posterous.com/api/readposts',
+    api_url = "https://posterous.com/api/"
+    
+    action_urls = {
+        'sites': 'getsites',
+        'readposts': 'readposts',
+        'post': 'newpost',
     }
     
     def __init__(self, username, password):
@@ -40,40 +43,46 @@ class Posterous(object):
         return str(s).encode('utf8')  
 
     def _build_url(self, url, data):
-        return '%s?%s' % (url, urllib.urlencode( [ (self._enc_utf8(k), self._enc_utf8(v)) for (k, v) in data.items() ] ))
+        return '%s?%s' % (url, urllib.urlencode( [ (self._enc_utf8(k), 
+                          self._enc_utf8(v)) for (k, v) in data.items() ] ))
 
-    def _get(self, url, params={}):
+    def _get(self, action, params={}):
+        url = self.api_url + action
         logging.debug("Trying to get contents of URL '%s'" % url)
+        auth = b64encode("%s:%s" % (self.username, self.password))
         req = urllib2.Request(self._build_url(url, params), None, 
-                { "Authorization" : "Basic %s" % b64encode("%s:%s" % (self.username, self.password)) }
-            )
+                { "Authorization" : "Basic %s" % auth })
         return urllib2.urlopen(req).read()
         
     def get_posts(self, *args, **kw):
         """ 
         Invokes the 'readposts' method of the Posterous API.
         
-        Simply pipes through arguments to the Posterous API. This means, that 
-        the names of the arguments passed to this method must correspond with the variable names
-        accepted by the Posterous API for the 'readposts' call.
+        Simply pipes through arguments to the Posterous API. This means,
+        that the names of the arguments passed to this method must 
+        correspond with the variable names accepted by the Posterous API
+        for the 'readposts' call.
         
         Currently these are the following:
             "site_id" - Optional. Id of the site to read from
             "hostname" - Optional. Subdomain of the site to read from
-            "num_posts" - Optional. How many posts you want. Default is 10, max is 50
-            "page" - Optional. What 'page' you want (based on num_posts). Default is 1
+            "num_posts" - Optional. How many posts you want. Default is
+                          10, max is 50
+            "page" - Optional. What 'page' you want (based on 
+                     num_posts). Default is 1
             "tag" - Optional
         
-        No validation is done on the arguments. This means, the method doesn't care if an
-        invalid value like a negative num_posts is provided. It's the responsibility of the 
-        caller to provide correct values
+        No validation is done on the arguments. This means, the method 
+        doesn't care if an invalid value like a negative num_posts is 
+        provided. It's the responsibility of the caller to provide 
+        correct values
         
         See http://posterous.com/api/reading for more details
         
         Returns a list of Post objects, may be an empty list 
         """
         logging.info("Trying to get posts with params: '%s'" % str(kw))
-        return parse_posts_xml(self._get(self.urls['readposts'], kw))
+        return parse_posts_xml(self._get(self.action_urls['readposts'], kw))
             
     def get_sites(self):
         """ 
@@ -83,7 +92,7 @@ class Posterous(object):
         Returns a list of Site objects, may be an empty list
         """
         logging.info("Trying to get all sites information")
-        return parse_sites_xml( self._get(self.urls['sites']) )
+        return parse_sites_xml(self._get(self.action_urls['sites']))
         
 
 ###
@@ -105,25 +114,24 @@ def parse_date(value):
         
 def type_converter(tagname, value):
     def parse_bool(s):
-        if s.lower() == 'true':return True
-        else: return False
+        return True if s.lower() == 'true' else False
         
     converter_map = {
-            'id': int,
-            'views': int,
-            'num_posts': int,
-            'filesize': int,
-            'thumb_filesize': int,
-            'medium_filesize': int,
-            'thumb_width': int,
-            'medium_width': int,
-            'thumb_height': int,
-            'medium_height': int,
-            'private': parse_bool,
-            'primary': parse_bool,
-            'commentsenabled': parse_bool,
-            'date': parse_date
-        }
+        'id': int,
+        'views': int,
+        'num_posts': int,
+        'filesize': int,
+        'thumb_filesize': int,
+        'medium_filesize': int,
+        'thumb_width': int,
+        'medium_width': int,
+        'thumb_height': int,
+        'medium_height': int,
+        'private': parse_bool,
+        'primary': parse_bool,
+        'commentsenabled': parse_bool,
+        'date': parse_date
+    }
     return converter_map[tagname](value) if tagname in converter_map else value
 
 
@@ -165,9 +173,12 @@ def parse_posts_xml(xml_string):
     str_list = []
     
     def start_element(name, attrs):
-        if name == 'err' and tagstack[-1] == 'rsp': raise ApiError(attrs['msg'], attrs['status'])
-        elif name == 'post': resp.append( Post() )
-        elif name == 'comment': resp.append( Comment() )
+        if name == 'err' and tagstack[-1] == 'rsp': 
+            raise ApiError(attrs['msg'], attrs['status'])
+        elif name == 'post': 
+            resp.append(Post())
+        elif name == 'comment': 
+            resp.append(Comment())
         tagstack.append(name)
         del str_list[:]
         
@@ -184,15 +195,18 @@ def parse_posts_xml(xml_string):
             o[tagname] = type_converter(tagname, elemtext)
             
         elif tagname == 'type' and elemtext == 'image':
-            ## we can only find out if we're inside <media> of type image, when we finished parsing <type>
+            ## we can only find out if we're inside <media> of type image, 
+            ## when we finished parsing <type>
             resp.append(Image())
             
         elif tagname == 'type' and elemtext == 'video':
-            ## we can only find out if we're inside <media> of type video, when we finished parsing <type>
+            ## we can only find out if we're inside <media> of type video, 
+            ## when we finished parsing <type>
             resp.append(Video())
             
         elif tagname == 'type' and elemtext == 'audio':
-            ## we can only find out if we're inside <media> of type audio, when we finished parsing <type>
+            ## we can only find out if we're inside <media> of type audio, 
+            ## when we finished parsing <type>
             resp.append(Audio())
         
         elif o.whoami() == 'Comment' and tagname in Comment.args:
@@ -200,7 +214,8 @@ def parse_posts_xml(xml_string):
             o[tagname] = type_converter(tagname, elemtext)
             
         elif o.whoami() == 'Comment' and tagname == 'comment':
-            ## a </comment> tag; remove Comment instance from stack and add to latest Post instance
+            ## a </comment> tag; remove Comment instance from stack and add 
+            ## to latest Post instance
             comment = resp.pop()
             resp[-1].comments.append(comment)
             
@@ -213,23 +228,26 @@ def parse_posts_xml(xml_string):
             o[tagname] = type_converter(tagname, elemtext)
             
         elif o.whoami() == 'Image':
-            # tag before an actual image data, must be either <medium> or <thumb>
-            # ... use it as prefix for Image instance attribute name
+            ## tag before an actual image data, must be either <medium> or 
+            ## <thumb>
+            ## ... use it as prefix for Image instance attribute name
             sizetag = tagstack[-2]  
             img_attr_name = "%s_%s" % (sizetag, tagname)
             if sizetag in ('medium', 'thumb') and img_attr_name in Image.args:
                 o[img_attr_name] = type_converter(img_attr_name, elemtext)
                 
         if tagname == 'media':
-            ## a </media> tag; remove Image/Audio/Video instance from stack and add to latest Post instance
+            ## a </media> tag; remove Image/Audio/Video instance from stack 
+            ## and add to latest Post instance
             img = resp.pop()
             resp[-1].media.append(img)
             
-        ### FIXME formulate more compact withouth many if and elif using some kind of mapping table
+        ### FIXME formulate more compact withouth many if and elif using 
+        ### some kind of mapping table
         
         tagstack.pop()
         
-        
+
     parser = xml.parsers.expat.ParserCreate()
     parser.StartElementHandler = start_element
     parser.EndElementHandler = end_element
@@ -239,7 +257,9 @@ def parse_posts_xml(xml_string):
     
         
 class PosterousData(dict):
-    """ (private) Base class that provides nice utility methods for data holding classes
+    """ 
+    (private) Base class that provides nice utility methods for data 
+    holding classes.
     """
     def __init__(self, **kw):                 
         for k, v in self.args.iteritems(): self[k] = v  
@@ -255,8 +275,7 @@ class PosterousData(dict):
 
 
 class Site(PosterousData):
-    """Data holder class for a posterous site
-    """
+    """Data holder class for a posterous site"""
     args = {
         'id': '', 
         'name': '', 
@@ -270,8 +289,7 @@ class Site(PosterousData):
 
         
 class Post(PosterousData):
-    """Data holder class for Posts 
-    """
+    """Data holder class for Posts"""
     args = {
         'title': '', 
         'url': '', 
@@ -293,8 +311,7 @@ class Post(PosterousData):
 
 
 class Image(PosterousData):
-    """Data holder class for Media of type 'image'
-    """
+    """Data holder class for Media of type 'image'"""
     args = {
         'medium_filesize': '', 
         'medium_height': '', 
@@ -308,8 +325,7 @@ class Image(PosterousData):
 
 
 class Audio(PosterousData):
-    """Data holder class for Media of type 'audio'
-    """
+    """Data holder class for Media of type 'audio'"""
     args = {
         'url': '', 
         'filesize': '', 
@@ -320,8 +336,7 @@ class Audio(PosterousData):
 
 
 class Video(PosterousData):
-    """Data holder class for Media of type 'video'
-    """
+    """Data holder class for Media of type 'video'"""
     args = {
         'url': '', 
         'filesize': '', 
@@ -332,8 +347,7 @@ class Video(PosterousData):
 
          
 class Comment(PosterousData):
-    """Data holder class for a single Comment
-    """
+    """Data holder class for a single Comment"""
     args = {
         'body': '', 
         'date': '', 
@@ -343,11 +357,11 @@ class Comment(PosterousData):
 
 
 class ApiError:
-    """ """
+    """Formats an error response"""
     msg = ''
     status_code = 0
     def __init__(self, msg, code):
         (self.msg, self.status_code) = (msg, code)
     
     def __str__(self):
-        return "Posterour API Error: Code=%s, Message=%s" % (self.status_code, self.msg)
+        return "Posterous API Error: Code=%s, Message=%s" % (self.status_code, self.msg)
