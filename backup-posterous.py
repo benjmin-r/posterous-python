@@ -44,9 +44,9 @@ if __name__ == '__main__':
     opt_parser.add_option("-p", "--password", dest="password", 
         help="Password associated with posterous account")
     
-    opt_parser.add_option("-f", "--folder", dest="folder", 
+    opt_parser.add_option("-f", "--folder", dest="folder", default="backup",
         help="Folder to store backup data in (Beware, if it exists, " \
-             "data may be overwritten)")
+             "data may be overwritten). Defaults to backup/")
     
     opt_parser.add_option("-s", "--site-id", type="int", dest="site_id",                
         help="Only query site with this id")
@@ -90,6 +90,11 @@ if __name__ == '__main__':
         logging.info("Creating folder '%s' for site '%s'" % (site_folder, site.id))
         if not os.path.exists(site_folder):
             os.makedirs(site_folder)
+                    
+        # create a private folder in case they have private posts
+        private_folder = os.path.join(site_folder, "private")
+        if not os.path.exists(private_folder):
+            os.mkdir(private_folder)
 
         site_file = os.path.join(site_folder, 'site-%s.json' % site.hostname)
         logging.debug(u"Opening file '%s' for site '%s' (%s)" % 
