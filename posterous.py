@@ -18,16 +18,17 @@ from base64 import b64encode
 from copy import copy
 import xml.parsers.expat
 import logging 
+import os.path
 from datetime import datetime, timedelta
 import urllib2, urllib
-
+import helpers
 
 class Posterous(object):
     """ """
     
     api_url = "https://posterous.com/api/"
-    
-    action_urls = {
+
+    action_path = {
         'sites': 'getsites',
         'readposts': 'readposts',
         'post': 'newpost',
@@ -38,22 +39,50 @@ class Posterous(object):
         self.username = username
         self.password = password
         
-    def _enc_utf8(self, s):
-        """ Convenience func for encoding a string in utf8 """
-        return str(s).encode('utf8')  
-
     def _build_url(self, url, data):
-        return '%s?%s' % (url, urllib.urlencode( [ (self._enc_utf8(k), 
-                          self._enc_utf8(v)) for (k, v) in data.items() ] ))
+        return '%s?%s' % (url, data)
+
+    def _encode_params(self, params):
+        ret = []
+        # remove empty fields from the dict
+        params = helpers.strip_dict(params)
+
+        for k, v in params.items():
+            k = helpers.enc_utf8(k)
+            if isinstance(v, list):
+                # a list of values need to be turned into tuples
+                # with the first index being the field name and the 
+                # second being the value.
+                ### NOTE if the value is file data, the utf8 encoding fails
+                ### ... not sure what to do with this, so I'm removing the
+                ### encoding for now.
+                ret.extend(map(lambda tup: (k, tup), v))
+            else:
+                ret.append((k, helpers.enc_utf8(v)))
+        return urllib.urlencode(ret)
+
+    def _req(self, action, params):
+        url = self.api_url + action
+        data = self._encode_params(params)
+        auth = b64encode("%s:%s" % (self.username, self.password))
+        return (url, data, auth)
 
     def _get(self, action, params={}):
-        url = self.api_url + action
-        logging.debug("Trying to get contents of URL '%s'" % url)
-        auth = b64encode("%s:%s" % (self.username, self.password))
-        req = urllib2.Request(self._build_url(url, params), None, 
-                { "Authorization" : "Basic %s" % auth })
+        """ GET request """
+        url, data, auth = self._req(action, params) 
+        logging.debug("Making a GET request to URL '%s'" % url)
+        req = urllib2.Request(self._build_url(url, data), None, 
+                              { "Authorization" : "Basic %s" % auth })
         return urllib2.urlopen(req).read()
         
+    def _post(self, action, params={}):
+        """ POST request """
+        url, data, auth = self._req(action, params) 
+        logging.debug("Making a POST request to URL '%s'" % url)
+        req = urllib2.Request(url, data, 
+                              { "Authorization" : "Basic %s" % auth })    
+        return urllib2.urlopen(req).read()
+    
     def get_posts(self, *args, **kw):
         """ 
         Invokes the 'readposts' method of the Posterous API.
@@ -82,7 +111,7 @@ class Posterous(object):
         Returns a list of Post objects, may be an empty list 
         """
         logging.info("Trying to get posts with params: '%s'" % str(kw))
-        return parse_posts_xml(self._get(self.action_urls['readposts'], kw))
+        return parse_posts_xml(self._get(self.action_path['readposts'], kw))
             
     def get_sites(self):
         """ 
@@ -92,8 +121,104 @@ class Posterous(object):
         Returns a list of Site objects, may be an empty list
         """
         logging.info("Trying to get all sites information")
-        return parse_sites_xml(self._get(self.action_urls['sites']))
+        return parse_sites_xml(self._get(self.action_path['sites']))
+
+    def new_post(self, **kw):
+        """
+        Returns a Posting
+        """
+        logging.info("Creating new post object")
+        post = Posting(self, **kw)
+        return post 
+
+
+class Posting(object):
+    """
+    A class for creating a new post on a blog. The args are set by
+    passing **kw args to the Posterous class or by setting them 
+    directly. 
+
+    To add media to the posting, call add_media().
+
+    When the object is ready to be posted, call the save() method to 
+    initiate the API request.
+    """
+    args = {
+        'site_id': '',
+        'media[]': '',
+        'title': '',
+        'body': '',
+        'autopost': '',
+        'private': '',
+        'date': '',
+        'source': '',
+        'sourceLink': '',
+    }
+
+    ### TODO Need a type converter to change bools in the args to numbers
+    ### TODO Need to parse the response like the get methods do
+
+    def __init__(self, api_callback, **kw):
+        # set the arg values if any were passed in
+        for k, v in kw.iteritems():
+            if k in self.args:
+                self.args[k] = v
         
+        self.__api_callback = api_callback
+        self.media_data = []
+        self.__dict__.update(self.args)
+
+    def add_media(self, quiet=False, **kw):
+        """
+        Adds file data to the post. This method doesn't overwrite
+        any previously added media. The supported method parameters 
+        are:
+
+        url - The URL of the file. Can be a list of url strings.
+        path - The local path to the file. Can be a list of path strings.
+        file - The contents of a read file. Can be a list.
+        quiet - If False, an exception is immediately raised if a file
+                cannot be found or opened. If True, the file is skipped.
+        """
+        ### TODO pull data from urls
+       
+        def from_path(path):
+            # check if path exists and grab the file data
+            if os.path.exists(path):
+                file = open(path, 'rb')
+                self.media_data.append(file.read())
+                logging.info("Added file '%s' to media" % path.split('/')[-1])
+                file.close()
+            elif not quiet:
+                raise Exception("Cannot add file to media as path '%s' does " \
+                                "not exist." % path)
+
+        # Check for file paths
+        if 'path' in kw:
+            path = kw['path']
+            if isinstance(path, list):
+                map(from_path, path)
+            else:
+                from_path(path)
+
+        # Save the file data
+        if 'file' in kw:
+            file = kw['file']
+            if isinstance(file, list):
+                self.media_data += file
+            else:
+                self.media_data.append(file)
+            logging.info("Added file data to media")
+
+    def save(self):
+        """ Saves the post to Posterous """
+        logging.info("Saving post to posterous")
+
+        if self.media_data:
+            self.args['media[]'] = self.media_data
+        
+        resp = self.__api_callback._post('newpost', self.args)
+        print '\nresp:\n%s' % resp
 
 ###
 ### Everything related to parsing responses
@@ -115,7 +240,7 @@ def parse_date(value):
 def type_converter(tagname, value):
     def parse_bool(s):
         return True if s.lower() == 'true' else False
-        
+    
     converter_map = {
         'id': int,
         'views': int,
@@ -254,15 +379,16 @@ def parse_posts_xml(xml_string):
     parser.CharacterDataHandler = char_data
     parser.Parse(xml_string)
     return resp
-    
         
+
 class PosterousData(dict):
     """ 
     (private) Base class that provides nice utility methods for data 
     holding classes.
     """
-    def __init__(self, **kw):                 
-        for k, v in self.args.iteritems(): self[k] = v  
+    def __init__(self, **kw): 
+        for k, v in self.args.iteritems(): 
+            self[k] = v
         super(PosterousData, self).__init__(kw)
         self.__dict__ = self
         
@@ -273,7 +399,7 @@ class PosterousData(dict):
     def whoami(self):
         return type(self).__name__
 
-
+        
 class Site(PosterousData):
     """Data holder class for a posterous site"""
     args = {
@@ -287,7 +413,7 @@ class Site(PosterousData):
         'num_posts': '', 
     }
 
-        
+
 class Post(PosterousData):
     """Data holder class for Posts"""
     args = {
