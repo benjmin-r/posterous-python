@@ -125,7 +125,8 @@ class Posterous(object):
 
     def new_post(self, **kw):
         """
-        Returns a Posting
+        Returns a Posting object. Call the object's save() method to 
+        send it to Posterous.
         """
         logging.info("Creating new post object")
         post = Posting(self, **kw)
