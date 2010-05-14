@@ -30,8 +30,7 @@ http://post.ly/4567
 >>> post = p.new_post(title="I love Posterous")
 >>> post.body = "Do you love it too?"
 >>> image = open("jellyfish.png", "rb").read()
->>> post.add_media(quiet=True, file=image, url=["http://example.com/song.mp3",
-                   "http://example.com/story.pdf"])
+>>> post.add_media(quiet=True, file=image, url=["http://example.com/song.mp3", http://example.com/story.pdf"])
 >>> post.source = "Posterous Python wrapper"
 >>> post.save()
 
