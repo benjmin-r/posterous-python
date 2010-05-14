@@ -21,7 +21,9 @@ import logging
 import os.path
 from datetime import datetime, timedelta
 import urllib2, urllib
-import helpers
+
+from posterous.utils import *
+
 
 class Posterous(object):
     """ """
@@ -45,10 +47,10 @@ class Posterous(object):
     def _encode_params(self, params):
         ret = []
         # remove empty fields from the dict
-        params = helpers.strip_dict(params)
+        params = strip_dict(params)
 
         for k, v in params.items():
-            k = helpers.enc_utf8(k)
+            k = enc_utf8(k)
             if isinstance(v, list):
                 # a list of values need to be turned into tuples
                 # with the first index being the field name and the 
@@ -58,7 +60,7 @@ class Posterous(object):
                 ### encoding for now.
                 ret.extend(map(lambda tup: (k, tup), v))
             else:
-                ret.append((k, helpers.enc_utf8(v)))
+                ret.append((k, enc_utf8(v)))
         return urllib.urlencode(ret)
 
     def _req(self, action, params):
@@ -135,11 +137,11 @@ class Posterous(object):
 
 class Posting(object):
     """
-    A class for creating a new post on a blog. The args are set by
+    A class for creating a new post. The args are set by
     passing **kw args to the Posterous class or by setting them 
     directly. 
 
-    To add media to the posting, call add_media().
+    To add media to the post, call add_media().
 
     When the object is ready to be posted, call the save() method to 
     initiate the API request.
@@ -245,8 +247,7 @@ class Posting(object):
         if self.media_data:
             self.args['media[]'] = self.media_data
       
-        resp = self.__api_callback._post('newpost', self.args)
-        print '\nresp:\n%s' % resp
+        return self.__api_callback._post('newpost', self.args)
 
 ###
 ### Everything related to parsing responses

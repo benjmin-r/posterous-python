@@ -12,7 +12,7 @@ import sys
 import urlparse, urllib
 import simplejson
 
-from posterous import Posterous
+from posterous.api import Posterous
 
 
 class JsonDateEncoder(simplejson.JSONEncoder):
