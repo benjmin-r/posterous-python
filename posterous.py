@@ -181,9 +181,9 @@ class Posting(object):
         quiet - If False, an exception is immediately raised if a file
                 cannot be found or opened. If True, the file is skipped.
         """
-        ### TODO pull data from urls
        
         def from_path(path):
+            """ Saves the file content at the provided path """
             # check if path exists and grab the file data
             if os.path.exists(path):
                 file = open(path, 'rb')
@@ -193,6 +193,27 @@ class Posting(object):
             elif not quiet:
                 raise Exception("Cannot add file to media as path '%s' does " \
                                 "not exist." % path)
+
+        def from_url(url):
+            """ Saves the contents of url in the media_data list """
+            req = urllib2.Request(url)
+            try:
+                file = urllib2.urlopen(req).read()
+                self.media_data.append(file)
+            except urllib2.HTTPError, e:
+                if not quiet:
+                    print "%s - Unable to download file at %s" % (e, url)
+            except urllib2.URLError, e:
+                if not quiet:
+                    print "%s - Unable to download file at %s" % (e, url)
+        
+        # Download contents of the url
+        if 'url' in kw:
+            url = kw['url']
+            if isinstance(url, list):
+                map(from_url, url)
+            else:
+                from_url(url)
 
         # Check for file paths
         if 'path' in kw:
@@ -206,7 +227,7 @@ class Posting(object):
         if 'file' in kw:
             file = kw['file']
             if isinstance(file, list):
-                self.media_data += file
+                self.media_data.extend(file)
             else:
                 self.media_data.append(file)
             logging.info("Added file data to media")
@@ -215,9 +236,15 @@ class Posting(object):
         """ Saves the post to Posterous """
         logging.info("Saving post to posterous")
 
+        ## NOTE Probably not the best way to do this. Should the class
+        ## inherit dict instead? 
+        for k, v in self.__dict__.items():
+            if k in self.args:
+                self.args[k] = v
+        
         if self.media_data:
             self.args['media[]'] = self.media_data
-        
+      
         resp = self.__api_callback._post('newpost', self.args)
         print '\nresp:\n%s' % resp
 
