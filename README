@@ -2,11 +2,13 @@ posterous.py
 ============
 A very simple (and incomplete) wrapper around the posterous API
 that's available at http://posterous.com/api
-Currently (v0.1) only supports reading sites & posts
+Currently (v0.1) only supports reading sites & posts, and creating new posts.
 
 Sample usage:
 >>> import posterous
 >>> p = posterous.Posterous('username', 'password')
+
+# Get the user's sites
 >>> sites = p.get_sites()
 >>> for s in sites:
 ...   print s.name
@@ -14,6 +16,8 @@ Sample usage:
 testsite1
 testsite2
 testsite3
+
+# Get the users posts
 >>> posts = p.get_posts(site_id=sites[0].id, num_posts=3, page=2)
 >>> for p in posts:
 ...   print p.url
@@ -21,8 +25,14 @@ testsite3
 http://post.ly/2345
 http://post.ly/3456
 http://post.ly/4567
->>>
 
+# Create a new post
+>>> post = p.new_post(title="I love Posterous")
+>>> post.body = "Do you love it too?"
+>>> image = open("jellyfish.png", "rb").read()
+>>> post.add_media(quiet=True, file=image, url=["http://example.com/song.mp3", http://example.com/story.pdf"])
+>>> post.source = "Posterous Python wrapper"
+>>> post.save()
 
 backup-posterous.py
 =====================
@@ -45,7 +55,7 @@ Options:
                           Password associated with posterous account
     -f FOLDER, --folder=FOLDER
                           Folder to store backup data in (Beware, if it exists,
-                          data may be overwritten)
+                          data may be overwritten). Defaults to backup/
     -s SITE_ID, --site-id=SITE_ID
                           Only query site with this id
     -b BATCH_SIZE, --batch-size=BATCH_SIZE

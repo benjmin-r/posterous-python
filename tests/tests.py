@@ -4,7 +4,7 @@ sys.path.append("..")
 
 from datetime import datetime 
 import os.path
-import posterous
+from posterous.api import *
 
 
 def get_file_name(n):
