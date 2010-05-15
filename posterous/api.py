@@ -12,7 +12,9 @@ License:
 """
 
 __author__ = "Benjamin Reitzammer <http://github.com/nureineide>"
-__version__ = "0.1"
+__email__ = "benjamin@squeakyvessel.com"
+__version__ = "0.2"
+__credits__ = ['Michael Campagnaro <http://github.com/mikecampo>']
 
 from base64 import b64encode
 from copy import copy
