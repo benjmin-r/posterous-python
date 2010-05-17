@@ -18,12 +18,10 @@ def bind_method(**options):
         payload_type = options.get('payload_type', None)
         payload_list = options.get('payload_list', False)
         allowed_param = options.get('allowed_param', [])
-        req_method = options.get('req_method', 'GET')
+        method = options.get('method', 'GET')
         require_auth = options.get('require_auth', False)
 
         def __init__(self, api, args, kwargs):
-            print 'Initialized APIMethod: args=%s, kw=%s' % (args, kwargs)
-            
             # If the method requires authentication and no credentials
             # are provided, throw an error
             if self.require_auth and not api.auth:
@@ -33,10 +31,9 @@ def bind_method(**options):
 
 
         def execute(self):
-            print 'Executing api method'
+            pass
 
     def _call(api, *args, **kwargs):
-        logging.info('Calling API method')
         method = APIMethod(api, args, kwargs)
         return method.execute()
 
