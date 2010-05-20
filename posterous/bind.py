@@ -13,6 +13,7 @@ import logging
 
 from posterous.utils import enc_utf8_str
 
+
 def bind_method(**options):
 
     class APIMethod(object):
@@ -37,21 +38,33 @@ def bind_method(**options):
             self.build_parameters(args, kwargs)
 
         def build_parameters(self, args, kwargs):
-            self.parameters = {}
+            self.parameters = []
             
             for idx, arg in enumerate(args):
                 try:
-                    self.parameters[self.allowed_param[idx]] = enc_utf8_str(arg)
+                    key = self.allowed_param[idx]
                 except IndexError:
                     raise Exception('Too many parameters supplied!')
-            
+                
+                if isinstance(arg, list):
+                    key = key + '[]'
+                    self.parameters.extend(map(lambda val: (key, 
+                                           enc_utf8_str(val)), arg))
+                else:
+                    self.parameters.append((key, enc_utf8_str(arg)))
+
             for k, v in kwargs.items():
                 if not v:
                     continue
                 if k in self.parameters:
                     raise Exception('Multiple values for parameter %s '\
                                     'supplied!' % k)
-                self.parameters[k] = enc_utf8_str(v)
+                if isinstance(v, list):
+                    k = k + '[]'
+                    self.parameters.extend(map(lambda val: (k, 
+                                           enc_utf8_str(val)), v))
+                else:
+                    self.parameters.append((k, enc_utf8_str(v)))
 
         def execute(self):
             # Build request URL
@@ -61,16 +74,16 @@ def bind_method(**options):
             if self.api.auth:
                 self.api.auth.apply_auth(self.headers)
            
-            # test with empty parameters
+            # Encode the parameters
             post_data = None
             if self.method == 'POST':
                 post_data = urllib.urlencode(self.parameters)
             elif self.method == 'GET' and self.parameters:
                 url = '%s?%s' % (url, urllib.urlencode(self.parameters))
             
-            request = urllib2.Request(url, post_data, self.headers)
-
+            # Make the request
             try:
+                request = urllib2.Request(url, post_data, self.headers)
                 resp = urllib2.urlopen(request)
             except Exception, e:
                 # TODO: do better parsing of errors
