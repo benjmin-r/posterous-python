@@ -16,10 +16,14 @@ def strip_dict(d):
     return ret
 
 
-def enc_utf8(s):
-    """ Convenience func for encoding a string in utf8 """
-    return str(s).encode('utf8')
-
+def enc_utf8_str(arg):
+    """ Convenience func for encoding a value into a utf8 string """
+    # written by Michael Norton (http://docondev.blogspot.com/)
+    if isinstance(arg, unicode):
+        arg = arg.encode('utf-8')
+    elif not isinstance(arg, str):
+        arg = str(arg)
+    return arg
 
 def import_simplejson():
     try:

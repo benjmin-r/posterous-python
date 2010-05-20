@@ -50,6 +50,8 @@ class ModelParser(object):
             json_parser = JSONParser()
             data = json_parser.parse(method, payload)
 
+        print 'Parsing response: %s' % payload
+
         if method.payload_list:
             result = model.parse_list(method.api, data)
         else:

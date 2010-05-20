@@ -13,7 +13,7 @@ from posterous.utils import *
 
 
 class API(object):
-    def __init__(self, auth_handler=None, host='posterous.com',
+    def __init__(self, auth_handler=None, host='https://posterous.com',
                  api_root='/api', parser=None):
         self.auth = auth_handler
         self.host = host
@@ -79,7 +79,7 @@ class API(object):
     )
         
     """
-    Returns a list of tags for a post. Authentication is 
+    Returns a list of all post tags. Authentication is 
     optional. If it's not authenticated, either the site_id or 
     hostname is required and only tags in public posts/sites 
     will be returned.

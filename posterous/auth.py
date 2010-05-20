@@ -7,14 +7,13 @@
 #    the terms of the Apache License Version 2.0 available at 
 #    http://www.apache.org/licenses/LICENSE-2.0.txt 
 
-import base64
+from base64 import b64encode
 
 
 class BasicAuthHandler(object):
     
     def __init__(self, username, password):
-        self.username = username
-        self._b64auth = base64.b64encode('%s%s' % (username, password))
+        self._b64auth = b64encode('%s:%s' % (username, password))
 
     def apply_auth(self, headers):
         headers['Authorization'] = 'Basic %s' % self._b64auth
