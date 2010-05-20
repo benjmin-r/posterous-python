@@ -7,6 +7,7 @@
 #    the terms of the Apache License Version 2.0 available at 
 #    http://www.apache.org/licenses/LICENSE-2.0.txt 
 
+from posterous.parsers import ModelParser
 from posterous.bind import bind_method
 from posterous.utils import *
 
@@ -17,7 +18,7 @@ class API(object):
         self.auth = auth_handler
         self.host = host
         self.api_root = api_root
-        self.parser = parser # or ModelParser()
+        self.parser = parser or ModelParser()
 
     ## API methods 
     """
@@ -31,6 +32,9 @@ class API(object):
         'payload_type'  - The name of the Model class that will retain and 
                           parse the response data.
         'payload_list'  - If True, a list of 'payload_type' objects is returned.
+        'response_type' - Determines which parser to use. Set to 'json' if the
+                          response is in JSON format. Defaults to 'xml' if not
+                          specified.
         'allowed_param' - A list of params that the API method accepts.
         'require_auth'  - True if the API method requires authentication.
     """
@@ -148,6 +152,7 @@ class API(object):
         path = 'upload',
         method = 'POST',
         payload_type = 'json',
+        response_type = 'json',
         allowed_params = ['username', 'password', 'media', 'message', 'body', 
                           'source', 'sourceLink']
     )
@@ -160,6 +165,7 @@ class API(object):
         path = 'uploadAndPost',
         method = 'POST',
         payload_type = 'json',
+        response_type = 'json',
         allowed_params = ['username', 'password', 'media', 'message', 'body', 
                           'source', 'sourceLink']
     )

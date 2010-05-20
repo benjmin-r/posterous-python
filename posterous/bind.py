@@ -7,6 +7,8 @@
 #    the terms of the Apache License Version 2.0 available at 
 #    http://www.apache.org/licenses/LICENSE-2.0.txt 
 
+import urllib
+import urllib2
 import logging
 
 
@@ -17,6 +19,7 @@ def bind_method(**options):
         path = options['path']
         payload_type = options.get('payload_type', None)
         payload_list = options.get('payload_list', False)
+        response_type = options.get('response_type', 'xml')
         allowed_param = options.get('allowed_param', [])
         method = options.get('method', 'GET')
         require_auth = options.get('require_auth', False)
@@ -29,10 +32,12 @@ def bind_method(**options):
 
             self.api = api
 
-
         def execute(self):
-            pass
+            payload = {}
+            result = self.api.parser.parse(self, payload)
+            return result
 
+    
     def _call(api, *args, **kwargs):
         method = APIMethod(api, args, kwargs)
         return method.execute()

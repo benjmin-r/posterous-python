@@ -15,7 +15,19 @@ def strip_dict(d):
         if v: ret[k] = v
     return ret
 
+
 def enc_utf8(s):
     """ Convenience func for encoding a string in utf8 """
     return str(s).encode('utf8')
 
+
+def import_simplejson():
+    try:
+        import simplejson as json
+    except ImportError:
+        try:
+            # they may have django
+            from django.utils import simplejson as json
+        except ImportError:
+            raise ImportError, "Can't load a json library"
+    return json
