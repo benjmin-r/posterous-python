@@ -16,7 +16,7 @@ class XMLParser(object):
         pass
 
     def parse(self, method, payload):
-        return None
+        return {}
 
 
 class JSONParser(object):
@@ -24,7 +24,7 @@ class JSONParser(object):
         self.json_lib = import_simplejson()
 
     def parse(self, method, payload):
-        return None
+        return {}
 
 
 class ModelParser(object):
@@ -43,7 +43,6 @@ class ModelParser(object):
 
         # parse the response
         if method.response_type == 'xml':
-            # the xml parser will return json 
             xml_parser = XMLParser()
             data = xml_parser.parse(method, payload)
         else:

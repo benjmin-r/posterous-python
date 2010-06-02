@@ -60,18 +60,19 @@ class API(object):
     If it's not authenticated, either the site_id or hostname
     is required and only public posts will be returned.
     """
-    read_posts = bind_method(
-        path = 'readposts',
-        payload_type = 'post',
-        payload_list = True,
-        allowed_param = [
-            ('site_id', int), 
-            ('hostname', basestring), 
-            ('num_posts', int), 
-            ('page', int),
-            ('tag', basestring)],
-        require_auth = False
-    )
+    def read_posts(self, *args, **kargs):
+        bind_method(
+            path = 'readposts',
+            payload_type = 'post',
+            payload_list = True,
+            allowed_param = [
+                ('site_id', int), 
+                ('hostname', basestring), 
+                ('num_posts', int), 
+                ('page', int),
+                ('tag', basestring)],
+            require_auth = False
+        )(self, *args, **kargs)
 
     """
     Returns a post by interacting with the Post.ly API. 
