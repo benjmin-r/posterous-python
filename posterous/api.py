@@ -7,15 +7,18 @@
 #    the terms of the Apache License Version 2.0 available at 
 #    http://www.apache.org/licenses/LICENSE-2.0.txt 
 
+from datetime import datetime
+
 from posterous.parsers import ModelParser
 from posterous.bind import bind_method
 from posterous.utils import *
 
 
 class API(object):
-    def __init__(self, auth_handler=None, host='https://posterous.com',
-                 api_root='/api', parser=None):
-        self.auth = auth_handler
+    def __init__(self, username=None, password=None, 
+                 host='https://posterous.com', api_root='/api', parser=None):
+        self.username = username
+        self.password = password
         self.host = host
         self.api_root = api_root
         self.parser = parser or ModelParser()
@@ -61,7 +64,12 @@ class API(object):
         path = 'readposts',
         payload_type = 'post',
         payload_list = True,
-        allowed_param = ['site_id', 'hostname', 'num_posts', 'page', 'tag'],
+        allowed_param = [
+            ('site_id', int), 
+            ('hostname', basestring), 
+            ('num_posts', int), 
+            ('page', int),
+            ('tag', basestring)],
         require_auth = False
     )
 
@@ -74,7 +82,7 @@ class API(object):
     get_post = bind_method(
         path = 'getpost',
         payload_type = 'post',
-        allowed_param = ['id'],
+        allowed_param = [('id', int)],
         require_auth = False
     )
         
@@ -88,13 +96,15 @@ class API(object):
         path = 'gettags',
         payload_type = 'tag',
         payload_list = True,
-        allowed_param = ['site_id', 'hostname'],
+        allowed_param = [
+            ('site_id', int),
+            ('hostname', basestring)],
         require_auth = False
     )
 
     ## Posting
     """
-    Returns a new post.
+    Creates a new post and returns a post object.
     The media param must be set to file data. If posting 
     multiple files, provide a list of file data.
     """
@@ -102,8 +112,17 @@ class API(object):
         path = 'newpost',
         method = 'POST',
         payload_type = 'post',
-        allowed_param = ['site_id', 'title', 'body', 'media', 'autopost', 
-                         'private', 'date', 'tags', 'source', 'sourceLink'],
+        allowed_param = [
+            ('site_id', int), 
+            ('title', basestring),
+            ('body', basestring), 
+            ('media', (basestring, list)), 
+            ('autopost', bool), 
+            ('private', bool), 
+            ('date', datetime), 
+            ('tags', basestring), 
+            ('source', basestring), 
+            ('sourceLink', basestring)],
         require_auth = True
     )
 
@@ -116,7 +135,11 @@ class API(object):
         path = 'updatepost',
         method = 'POST',
         payload_type = 'post',
-        allowed_param = ['post_id', 'title', 'body', 'media'],
+        allowed_param = [
+            ('post_id', int),
+            ('title', basestring),
+            ('body', basestring), 
+            ('media', (basestring, list))],
         require_auth = True
     )
    
@@ -131,7 +154,12 @@ class API(object):
         path = 'newcomment',
         method = 'POST',
         payload_type = 'comment',
-        allowed_param = ['post_id', 'comment', 'name', 'email', 'date'],
+        allowed_param = [
+            ('post_id', int), 
+            ('comment', basestring),
+            ('name', basestring),
+            ('email', basestring),
+            ('date', datetime)],
         require_auth = True
     )
 
@@ -153,8 +181,14 @@ class API(object):
         method = 'POST',
         payload_type = 'json',
         response_type = 'json',
-        allowed_params = ['username', 'password', 'media', 'message', 'body', 
-                          'source', 'sourceLink']
+        allowed_params = [
+            ('username', basestring), 
+            ('password', basestring), 
+            ('media', (basestring, list)),
+            ('message', basestring),
+            ('body', basestring),
+            ('source', basestring),
+            ('sourceLink', basestring)]
     )
         
     """
@@ -166,7 +200,13 @@ class API(object):
         method = 'POST',
         payload_type = 'json',
         response_type = 'json',
-        allowed_params = ['username', 'password', 'media', 'message', 'body', 
-                          'source', 'sourceLink']
+        allowed_params = [
+            ('username', basestring), 
+            ('password', basestring), 
+            ('media', (basestring, list)),
+            ('message', basestring),
+            ('body', basestring),
+            ('source', basestring),
+            ('sourceLink', basestring)]
     )
         

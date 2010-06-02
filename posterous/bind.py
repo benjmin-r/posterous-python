@@ -9,7 +9,8 @@
 
 import urllib
 import urllib2
-import logging
+from datetime import datetime
+from base64 import b64encode
 
 from posterous.utils import enc_utf8_str
 
@@ -29,50 +30,79 @@ def bind_method(**options):
         def __init__(self, api, args, kwargs):
             # If the method requires authentication and no credentials
             # are provided, throw an error
-            if self.require_auth and not api.auth:
+            if self.require_auth and not (api.username and api.password):
                 raise Exception('Authentication is required!')
 
             self.api = api
             self.headers = kwargs.pop('headers', {})
             self.api_url = api.host + api.api_root
-            self.build_parameters(args, kwargs)
+            self._build_parameters(args, kwargs)
 
-        def build_parameters(self, args, kwargs):
+        def _build_parameters(self, args, kwargs):
             self.parameters = []
             
-            for idx, arg in enumerate(args):
-                try:
-                    key = self.allowed_param[idx]
-                except IndexError:
-                    raise Exception('Too many parameters supplied!')
-                
-                if isinstance(arg, list):
-                    key = key + '[]'
-                    self.parameters.extend(map(lambda val: (key, 
-                                           enc_utf8_str(val)), arg))
-                else:
-                    self.parameters.append((key, enc_utf8_str(arg)))
+            args = list(args)
+            args.reverse()
 
-            for k, v in kwargs.items():
-                if not v:
+            for name, p_type in self.allowed_param:
+                value = None
+                if args:
+                    value = args.pop()
+
+                if name in kwargs:
+                    if not value:
+                        value = kwargs.pop(name)
+                    else:
+                        raise TypeError('Multiple values for parameter %s '\
+                                        'supplied!' % name)
+                if not value:
                     continue
-                if k in self.parameters:
-                    raise Exception('Multiple values for parameter %s '\
-                                    'supplied!' % k)
-                if isinstance(v, list):
-                    k = k + '[]'
-                    self.parameters.extend(map(lambda val: (k, 
-                                           enc_utf8_str(val)), v))
-                else:
-                    self.parameters.append((k, enc_utf8_str(v)))
+
+                if not isinstance(p_type, tuple):
+                    p_type = (p_type,)
+
+                self._check_type(value, p_type, name)
+                self._set_param(name, value)
+            
+        def _check_type(self, value, p_type, name):
+            """
+            Throws a TypeError exception if the value type is not in the p_type
+            tuple.
+            """
+            if not isinstance(value, p_type):
+                raise TypeError('The value passed for parameter %s is not ' \
+                                'valid! It must be one of these: %s' 
+                                % (name, p_type))
+
+            if isinstance(value, list):
+                for val in value:
+                    if isinstance(val, list) or not isinstance(val, p_type):
+                        raise TypeError('A value passed for parameter %s is ' \
+                                        'not valid. It must be one of these: ' \
+                                        '%s' % (name, p_type))
+            
+        def _set_param(self, name, value):
+            """Do appropriate type casts and utf-8 encode the parameter values"""
+            if isinstance(value, bool):
+                value = int(value)
+            elif isinstance(value, datetime):
+                value = '%s +0000' % value.strftime('%a, %d %b %Y %H:%M:%S').split('.')[0]
+            elif isinstance(value, list):
+                for val in value:
+                    self.parameters.append(('%s[]' % name, enc_utf8_str(val)))
+                return
+            
+            self.parameters.append((name, enc_utf8_str(value)))
+
 
         def execute(self):
             # Build request URL
             url = self.api_url + '/' + self.path
 
             # Apply authentication if required
-            if self.api.auth:
-                self.api.auth.apply_auth(self.headers)
+            if self.api.username and self.api.password:
+                auth = b64encode('%s:%s' % (self.api.username, self.api.password))
+                self.headers['Authorization'] = 'Basic %s' % auth
            
             # Encode the parameters
             post_data = None
