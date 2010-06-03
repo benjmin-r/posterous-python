@@ -119,10 +119,34 @@ class XMLParser(object):
                 # Move to the first child before parsing the tree
                 result = XMLDict(root[0])
             
-            return result
+            # Make sure the values are formatted properly
+            return self.cleanup(result)
 
     def parse_error(self, error):
         raise PosterousError(error.get('msg'), error.get('code'))
+    
+    def cleanup(self, output):
+        def clean(obj):
+            if 'comment' in obj:
+                comments = obj['comment']
+                del obj['comment']
+                # make it a list
+                if not isinstance(comments, list):
+                    comments = [comments]
+                obj['comments'] = comments
+
+            if 'media' in obj:
+                # make it a list
+                if not isinstance(obj['media'], list):
+                    obj['media'] = [obj['media']]
+            return obj
+
+        if isinstance(output, list):
+            output = list((clean(obj) for obj in output))
+        else: 
+            output = clean(output)
+        
+        return output
 
 
 class ModelParser(object):

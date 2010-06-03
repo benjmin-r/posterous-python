@@ -37,7 +37,7 @@ class Post(Model):
         for k, v in json.iteritems():
             if k == 'media':
                 setattr(post, k, Media.parse(api, v))
-            elif k == 'comment':
+            elif k == 'comments':
                 setattr(post, k, Comment.parse(api, v))
             else: 
                 setattr(post, k, v)

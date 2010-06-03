@@ -22,19 +22,23 @@ That's it! Now fire up the posterous-shell to start playing with the library.
         print site.name
 
     # Get all of the posts from the first site
-    posts = api.read_posts(id=sites[0].id)
-
-    for post in api.read_posts(site[0].id):
+    for post in api.read_posts(id=sites[0].id):
         print '%s (%s)' % (post.title, post.url)
         print '  - written by %s' % post.author
 
         if post.commentsenabled:
-            print ' - has %s comment(s)' % post.commentscount
+            print '  - has %s comment(s)' % post.commentscount
             
-            if posts.commentscount > 0:
-                print 'Comments:'
-                for comment in posts.comments:
-                    print '%s by %s' % (comment.body, comment.author)
+            if post.commentscount > 0:
+                print '  - comments:'
+                for comment in post.comments:
+                    print '    - "%s" by %s' % (comment.body, comment.author)
+
+        if hasattr(post, 'media'):
+            print '  - media:'
+            for media in post.media:
+                print '    - %s' % media.url
+ 
         print '\n'
 
 
