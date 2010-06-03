@@ -43,13 +43,15 @@ It covers the entire API and it's really easy to extend when new API methods are
 
     # Add a comment
     post.new_comment("This is a really interesting post.")
-    
+   
+    Until there is full documentation coverage, you can take a look at api.py for the available methods and their arguments. The model objects also have methods that allow you to quickly perform actions (i.e. post.new_comment() instead of api.read_posts()[0].new_comment()), so look at models.py for those.
+
 ##In the future...
  Expect to see these new features:
- - Easy pagination for iterating over large result sets
- - Response caching
- - Full documentation
- - A cool script for backing up a Posterous site
+ * Easy pagination for iterating over large result sets
+ * Response caching
+ * Full documentation
+ * A cool script for backing up a Posterous site
 
 ##Last words
  The design of this library was very much inspired by [Tweepy](http://github.com/joshthecoder/tweepy). Tweepy is an excellent Python wrapper for Twitter's API, so give it a look if you're working with Twitter.
