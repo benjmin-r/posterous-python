@@ -7,20 +7,24 @@
 #    the terms of the Apache License Version 2.0 available at 
 #    http://www.apache.org/licenses/LICENSE-2.0.txt 
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import locale
 import time
 
 
-def parse_datetime(string):
+def parse_datetime(time_string):
     # Set locale for date parsing
-    locale.setlocale(locale.LC_TIME, 'C')
-    # Must parse datetime this way to work in python 2.4
-    date = datetime(*(time.strptime(string, '%a %b %d %H:%M:%S +0000 %Y')[0:6]))
+    utc_offset_str = time_string[-6:].strip()
+    sign = 1
+    
+    if utc_offset_str[0] == '-':
+        sign = -1
+        utc_offset_str = utc_offset_str[1:5]
 
-    # Reset the locale back to default setting
-    locale.setlocale(locale.LC_TIME, '')
-    return date
+    utcoffset = sign * timedelta(hours=int(utc_offset_str[0:2]), 
+                                 minutes=int(utc_offset_str[2:4]))
+
+    return datetime.strptime(time_string[:-6], '%a, %d %b %Y %H:%M:%S') - utcoffset
 
 def strip_dict(d):
     """Returns a new dictionary with keys that had a value"""

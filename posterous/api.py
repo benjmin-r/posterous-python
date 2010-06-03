@@ -38,7 +38,10 @@ class API(object):
         'response_type' - Determines which parser to use. Set to 'json' if the
                           response is in JSON format. Defaults to 'xml' if not
                           specified.
-        'allowed_param' - A list of params that the API method accepts.
+        'allowed_param' - A list of params that the API method accepts. Must be
+                          formatted as a list of tuples, with the param name
+                          being paired with the expected value type. If more
+                          than one type is allowed, place the types in a tuple.
         'require_auth'  - True if the API method requires authentication.
     """
     
@@ -60,19 +63,18 @@ class API(object):
     If it's not authenticated, either the site_id or hostname
     is required and only public posts will be returned.
     """
-    def read_posts(self, *args, **kargs):
-        bind_method(
-            path = 'readposts',
-            payload_type = 'post',
-            payload_list = True,
-            allowed_param = [
-                ('site_id', int), 
-                ('hostname', basestring), 
-                ('num_posts', int), 
-                ('page', int),
-                ('tag', basestring)],
-            require_auth = False
-        )(self, *args, **kargs)
+    read_posts = bind_method(
+        path = 'readposts',
+        payload_type = 'post',
+        payload_list = True,
+        allowed_param = [
+            ('site_id', int), 
+            ('hostname', basestring), 
+            ('num_posts', int), 
+            ('page', int),
+            ('tag', basestring)],
+        require_auth = False
+    )
 
     """
     Returns a post by interacting with the Post.ly API. 
@@ -83,7 +85,7 @@ class API(object):
     get_post = bind_method(
         path = 'getpost',
         payload_type = 'post',
-        allowed_param = [('id', int)],
+        allowed_param = [('id', basestring)],
         require_auth = False
     )
         

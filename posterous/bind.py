@@ -53,8 +53,7 @@ def bind_method(**options):
                     if not value:
                         value = kwargs.pop(name)
                     else:
-                        raise TypeError('Multiple values for parameter %s '\
-                                        'supplied!' % name)
+                        raise TypeError('Multiple values for parameter %s supplied!' % name)
                 if not value:
                     continue
 
@@ -66,34 +65,30 @@ def bind_method(**options):
             
         def _check_type(self, value, p_type, name):
             """
-            Throws a TypeError exception if the value type is not in the p_type
-            tuple.
+            Throws a TypeError exception if the value type is not in the p_type tuple.
             """
             if not isinstance(value, p_type):
-                raise TypeError('The value passed for parameter %s is not ' \
-                                'valid! It must be one of these: %s' 
-                                % (name, p_type))
+                raise TypeError('The value passed for parameter %s is not valid! It must be one of these: %s' % (name, p_type))
 
             if isinstance(value, list):
                 for val in value:
                     if isinstance(val, list) or not isinstance(val, p_type):
-                        raise TypeError('A value passed for parameter %s is ' \
-                                        'not valid. It must be one of these: ' \
-                                        '%s' % (name, p_type))
+                        raise TypeError('A value passed for parameter %s is not valid. It must be one of these: %s' % (name, p_type))
             
         def _set_param(self, name, value):
             """Do appropriate type casts and utf-8 encode the parameter values"""
             if isinstance(value, bool):
                 value = int(value)
+            
             elif isinstance(value, datetime):
                 value = '%s +0000' % value.strftime('%a, %d %b %Y %H:%M:%S').split('.')[0]
+            
             elif isinstance(value, list):
                 for val in value:
                     self.parameters.append(('%s[]' % name, enc_utf8_str(val)))
                 return
-            
-            self.parameters.append((name, enc_utf8_str(value)))
 
+            self.parameters.append((name, enc_utf8_str(value)))
 
         def execute(self):
             # Build request URL

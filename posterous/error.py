@@ -11,8 +11,8 @@ class PosterousError(Exception):
     """Posterous exception"""
     def __init__(self, error, code=None):
         self.message = error
-        self.error_code = error_code = code
+        self.error_code = code
 
     def __str__(self):
-        return self.message
+        return '(%s) %s' % (self.error_code, self.message)
 

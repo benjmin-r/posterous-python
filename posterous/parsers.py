@@ -7,8 +7,79 @@
 #    the terms of the Apache License Version 2.0 available at 
 #    http://www.apache.org/licenses/LICENSE-2.0.txt 
 
-from posterous.models import ModelFactory
+import xml.etree.cElementTree as ET
+
+from posterous.models import ModelFactory, attribute_map
 from posterous.utils import import_simplejson
+from posterous.error import PosterousError
+
+
+def set_type(name, value):
+    """Sets the value to the appropriate type."""
+    for names in attribute_map:
+        if name in names:
+            return attribute_map.get(names)(value)
+    # most likely a string
+    return value
+
+ 
+class XMLDict(dict):
+    """
+    Traverses the XML tree recursively and builds an object 
+    representation of each element. Element attributes are not
+    read since they don't appear in any current Posterous API
+    response. Returns a dictionary of objects.
+
+    Modified from: http://code.activestate.com/recipes/410469/
+    """
+    def __init__(self, parent_element):
+        childrenNames = list((child.tag for child in parent_element))
+
+        for element in parent_element:
+            if element:
+                if len(element) == 1 or element[0].tag != element[1].tag:
+                    # we assume that if the first two tags in a series are 
+                    # different, then they are all different.
+                    aDict = XMLDict(element)
+                else:
+                    # treat like list 
+                    aDict = {element[0].tag: XMLList(element)}
+                
+                if childrenNames.count(element.tag) > 1:
+                    # there are multiple siblings with this tag, so they 
+                    # must be grouped together
+                    try:
+                        # move this element's dict under the first sibling
+                        self[element.tag].append(aDict)
+                    except KeyError:
+                        # the first for this tag
+                        self.update({element.tag: [aDict]})
+                else:
+                    self.update({element.tag: aDict})
+            else:
+                # finally, if there are no child tags, extract the text
+                value = set_type(element.tag, element.text.strip()) 
+                self.update({element.tag: value})
+
+
+class XMLList(list):
+    """
+    Similar to the XMLDict class; traverses a list of element
+    siblings and creates a list of their values.
+
+    Modified from: http://code.activestate.com/recipes/410469/
+    """
+    def __init__(self, aList):
+        for element in aList:
+            if element:
+                if len(element) == 1 or element[0].tag != element[1].tag:
+                    self.append(XMLDict(element))
+                else:
+                    self.append(XMLList(element))
+            elif element.text:
+                text = set_type(element.tag, element.text.strip())
+                if text:
+                    self.append(text)
 
 
 class XMLParser(object):
@@ -16,23 +87,51 @@ class XMLParser(object):
         pass
 
     def parse(self, method, payload):
-        return {}
+        """Parses the XML payload and returns a dict of objects"""
+        root = ET.XML(payload)
+        
+        if root.tag != 'rsp':
+            raise PosterousError('XML response is missing the status tag! ' \
+                                 'The response may be malformed.')
+        
+        # Verify that the response was successful before parsing
+        if root.get('stat') == 'fail':
+            error = root[0]
+            self.parse_error(error)
+        else:
+            # There are nesting inconsistencies in the response XML 
+            # with some tags appearing below the payload model element. 
+            # This is a problem when the payload_type is _not_ a list.
+            # If the root has multiple children, all siblings of the first
+            # child will be moved under said child.
+            if not method.payload_list and len(root) > 1:
+                for node in root[1:]:
+                    root[0].append(node)
+                    root.remove(node)
+            
+            if method.payload_list:
+                # A list of results is expected
+                result = []
+                for node in root:
+                    result.append(XMLDict(node))
+            else:
+                # Move to the first child before parsing the tree
+                result = XMLDict(root[0])
+            
+            return result
 
-
-class JSONParser(object):
-    def __init__(self):
-        self.json_lib = import_simplejson()
-
-    def parse(self, method, payload):
-        return {}
+    def parse_error(self, error):
+        raise PosterousError(error.get('msg'), error.get('code'))
 
 
 class ModelParser(object):
+    """Used for parsing a method response into a model object."""
+
     def __init__(self, model_factory=None):
         self.model_factory = model_factory or ModelFactory
 
     def parse(self, method, payload):
-        # get the appropriate model for this payload
+        # Get the appropriate model for this payload
         try:
             if method.payload_type is None:
                 return
@@ -41,19 +140,13 @@ class ModelParser(object):
             raise Exception('No model for this payload type: %s' % 
                             method.payload_type)
 
-        # parse the response
+        # The payload XML must be parsed into a dict of objects before
+        # being used in the model.
         if method.response_type == 'xml':
             xml_parser = XMLParser()
             data = xml_parser.parse(method, payload)
         else:
-            json_parser = JSONParser()
-            data = json_parser.parse(method, payload)
+            raise NotImplementedError
 
-        print 'Parsing response: %s' % payload
+        return model.parse(method.api, data)
 
-        if method.payload_list:
-            result = model.parse_list(method.api, data)
-        else:
-            result = model.parse(method.api, data)
-
-        return result
