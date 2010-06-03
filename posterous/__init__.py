@@ -18,7 +18,6 @@ __email__ = "benjamin@squeakyvessel.com"
 __credits__ = ['Michael Campagnaro <http://github.com/mikecampo>']
 
 from posterous.api import API
-from posterous.models import Site, Post, Tag, Comment, Media, ModelFactory
 
 # unauthenticated instance 
 api = API()
