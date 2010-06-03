@@ -36,6 +36,7 @@ class XMLDict(dict):
         childrenNames = list((child.tag for child in parent_element))
 
         for element in parent_element:
+            tag = element.tag.lower()
             if element:
                 if len(element) == 1 or element[0].tag != element[1].tag:
                     # we assume that if the first two tags in a series are 
@@ -43,23 +44,23 @@ class XMLDict(dict):
                     aDict = XMLDict(element)
                 else:
                     # treat like list 
-                    aDict = {element[0].tag: XMLList(element)}
+                    aDict = {element[0].tag.lower(): XMLList(element)}
                 
-                if childrenNames.count(element.tag) > 1:
+                if childrenNames.count(tag) > 1:
                     # there are multiple siblings with this tag, so they 
                     # must be grouped together
                     try:
                         # move this element's dict under the first sibling
-                        self[element.tag].append(aDict)
+                        self[tag].append(aDict)
                     except KeyError:
                         # the first for this tag
-                        self.update({element.tag: [aDict]})
+                        self.update({tag: [aDict]})
                 else:
-                    self.update({element.tag: aDict})
+                    self.update({tag: aDict})
             else:
                 # finally, if there are no child tags, extract the text
-                value = set_type(element.tag, element.text.strip()) 
-                self.update({element.tag: value})
+                value = set_type(tag, element.text.strip()) 
+                self.update({tag: value})
 
 
 class XMLList(list):
@@ -77,7 +78,7 @@ class XMLList(list):
                 else:
                     self.append(XMLList(element))
             elif element.text:
-                text = set_type(element.tag, element.text.strip())
+                text = set_type(element.tag.lower(), element.text.strip())
                 if text:
                     self.append(text)
 

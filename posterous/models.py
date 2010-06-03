@@ -73,10 +73,7 @@ class Comment(Model):
     def parse_obj(self, api, json):
         comment = self(api)
         for k, v in json.iteritems():
-            if k == 'date':
-                setattr(comment, k, parse_datetime(v))
-            else:
-                setattr(comment, k, v)
+            setattr(comment, k, v)
         return comment
 
 
