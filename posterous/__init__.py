@@ -12,7 +12,7 @@ Simple wrapper-lib for accessing the Posterous API via python.
 See http://posterous.com/api
 """
                             
-__version__ = "0.2"
+__version__ = "1.0"
 __author__ = "Benjamin Reitzammer <http://github.com/nureineide>"
 __email__ = "benjamin@squeakyvessel.com"
 __credits__ = ['Michael Campagnaro <http://github.com/mikecampo>']

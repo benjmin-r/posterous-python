@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="posterous-python",
-    version="0.2",
+    version="1.0",
     description="Posterous API library for python",
     author="Benjamin Reitzammer, Michael Campagnaro",
     author_email="benjamin@squeakyvessel.com, mikecampo@gmail.com",
