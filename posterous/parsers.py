@@ -60,7 +60,17 @@ class XMLDict(dict):
             else:
                 # finally, if there are no child tags, extract the text
                 value = set_type(tag, element.text.strip()) 
-                self.update({tag: value})
+                if childrenNames.count(tag) > 1:
+                    # there are multiple instances of this tag, so they 
+                    # must be grouped together
+                    try:
+                        # append this tags text to the tag's matching list
+                        self[tag].append(value)
+                    except KeyError:
+                        # the first for this tag
+                        self.update({tag: [value]})
+                else:
+                    self.update({tag: value})
 
 
 class XMLList(list):
