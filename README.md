@@ -1,6 +1,7 @@
 # What is posterous-python?
-It's a simple to use Python library for the [Posterous API](http://posterous.com/api). 
+It's a simple to use Python library for version 1 of the [Posterous API](http://posterous.com/api). 
 It covers the entire API and it's really easy to extend when new API methods are added!
+Support for API v2 will be added soon. 
 
 ## Getting started
  * Check out the posterous-python source code using git:
@@ -8,7 +9,7 @@ It covers the entire API and it's really easy to extend when new API methods are
  * Run setuptools to install 
         sudo python setup.py install
 
-That's it! Now fire up the posterous-shell to start playing with the library.
+That's it! Now run the posterous-shell to start playing with the library.
 
 ##Sample usage
     import posterous
