@@ -29,6 +29,14 @@ class Model(object):
             results.append(self.parse_obj(api, obj))
         return results
 
+class Token(Model):
+    @classmethod
+    def parse(self, api, json):
+        token = self(api)
+        for k, v in json.iteritems():
+            setattr(token, k, v)
+        return token
+
 
 class Post(Model):
     @classmethod
@@ -121,6 +129,7 @@ class ModelFactory(object):
     """
     Used by parsers for creating instances of models. 
     """
+    token = Token
     post = Post
     site = Site
     comment = Comment

@@ -7,119 +7,115 @@
 #    the terms of the Apache License Version 2.0 available at 
 #    http://www.apache.org/licenses/LICENSE-2.0.txt 
 
-import urllib
-import urllib2
 from datetime import datetime
-from base64 import b64encode
+from os.path import join
+from posterous.utils import enc_utf8_str, basic_authentication, make_http_request
 
-from posterous.utils import enc_utf8_str
 
-
-def bind_method(**options):
-
-    class APIMethod(object):
-        # Get the options for the api method
-        path = options['path']
-        payload_type = options.get('payload_type', None)
-        payload_list = options.get('payload_list', False)
-        response_type = options.get('response_type', 'xml')
-        allowed_param = options.get('allowed_param', [])
-        method = options.get('method', 'GET')
-        require_auth = options.get('require_auth', False)
-
-        def __init__(self, api, args, kwargs):
-            # If the method requires authentication and no credentials
-            # are provided, throw an error
-            if self.require_auth and not (api.username and api.password):
-                raise Exception('Authentication is required!')
-
-            self.api = api
-            self.headers = kwargs.pop('headers', {})
-            self.api_url = api.host + api.api_root
-            self._build_parameters(args, kwargs)
-
-        def _build_parameters(self, args, kwargs):
-            self.parameters = []
-            
-            args = list(args)
-            args.reverse()
-
-            for name, p_type in self.allowed_param:
-                value = None
-                if args:
-                    value = args.pop()
-
-                if name in kwargs:
-                    if not value:
-                        value = kwargs.pop(name)
-                    else:
-                        raise TypeError('Multiple values for parameter %s supplied!' % name)
-                if not value:
-                    continue
-
-                if not isinstance(p_type, tuple):
-                    p_type = (p_type,)
-
-                self._check_type(value, p_type, name)
-                self._set_param(name, value)
-            
-        def _check_type(self, value, p_type, name):
-            """
-            Throws a TypeError exception if the value type is not in the p_type tuple.
-            """
-            if not isinstance(value, p_type):
-                raise TypeError('The value passed for parameter %s is not valid! It must be one of these: %s' % (name, p_type))
-
-            if isinstance(value, list):
-                for val in value:
-                    if isinstance(val, list) or not isinstance(val, p_type):
-                        raise TypeError('A value passed for parameter %s is not valid. It must be one of these: %s' % (name, p_type))
-            
-        def _set_param(self, name, value):
-            """Do appropriate type casts and utf-8 encode the parameter values"""
-            if isinstance(value, bool):
-                value = int(value)
-            
-            elif isinstance(value, datetime):
-                value = '%s +0000' % value.strftime('%a, %d %b %Y %H:%M:%S').split('.')[0]
-            
-            elif isinstance(value, list):
-                for val in value:
-                    self.parameters.append(('%s[]' % name, enc_utf8_str(val)))
-                return
-
-            self.parameters.append((name, enc_utf8_str(value)))
-
-        def execute(self):
-            # Build request URL
-            url = self.api_url + '/' + self.path
-
-            # Apply authentication if required
-            if self.api.username and self.api.password:
-                auth = b64encode('%s:%s' % (self.api.username, self.api.password))
-                self.headers['Authorization'] = 'Basic %s' % auth
-           
-            # Encode the parameters
-            post_data = None
-            if self.method == 'POST':
-                post_data = urllib.urlencode(self.parameters)
-            elif self.method == 'GET' and self.parameters:
-                url = '%s?%s' % (url, urllib.urlencode(self.parameters))
-            
-            # Make the request
-            try:
-                request = urllib2.Request(url, post_data, self.headers)
-                resp = urllib2.urlopen(request)
-            except Exception, e:
-                # TODO: do better parsing of errors
-                raise Exception('Failed to send request: %s' % e)
-
-            return self.api.parser.parse(self, resp.read())
-
-    
+def bind_method(**options):        
     def _call(api, *args, **kwargs):
-        method = APIMethod(api, args, kwargs)
+        method = APIMethod(api, options, args, kwargs)
         return method.execute()
-
     return _call
 
+class APIMethod(object):
+    def __init__(self, api, method_options, args, kwargs):
+        self.api = api
+        self.headers = kwargs.pop('headers', {})
+
+        # Get the options for the api method
+        self.path = method_options['path']
+        self.payload_type = method_options.get('payload_type', None)
+        self.allowed_params = method_options.get('parameters', [])
+        self.method = method_options.get('method', 'GET')
+        self.auth_type = method_options.get('auth_type', None)
+
+        self._build_parameters(args, kwargs)
+
+    def execute(self):
+        if self.auth_type:
+            # Apply authentication if required
+            self._check_authentication()
+
+        try:
+            # Make the web request
+            url = join(self.api.api_url, self.path)
+            resp = make_http_request(url, self.method, self.parameters, self.headers)
+        except Exception, e:
+            raise Exception("Failed to send request: {0}".format(e))
+
+        # Return the parsed payload. Will be a model instance if the default parser is used
+        return self.api.parser.parse(self, resp.read())
+
+    def _check_authentication(self):
+        if not (self.api.username and self.api.password):
+            raise Exception("You must supply a username and password for this call!")
+        
+        # Check the auth types
+        if self.auth_type == 'basic':
+            basic_authentication(self.api.username, self.api.password, self.headers)
+        elif self.auth_type == 'token':
+            token = self.api.api_token()    
+            self.allowed_params['api_token'] = token
+        else:
+            raise Exception("The authentication type '{0}' is not " \
+                            "supported!".format(self.auth_type))
+
+    def _build_parameters(self, args, kwargs):
+        self.parameters = []
+        
+        args = list(args)
+        args.reverse()
+
+        for name, p_type in self.parameters:
+            value = None
+
+            if args:
+                value = args.pop()
+            if name in kwargs:
+                if not value:
+                    value = kwargs.pop(name)
+                else:
+                    raise TypeError("Multiple values for parameter {0} " \
+                                    "supplied!".format(name))
+            
+            if not value:
+                continue
+
+            if not isinstance(p_type, tuple):
+                p_type = (p_type,)
+
+            self._check_type(value, p_type, name)
+            self._set_param(name, value)
+        
+    def _check_type(self, value, p_type, name):
+        """
+        Throws a TypeError exception if the value type is not in the p_type tuple.
+        """
+        if not isinstance(value, p_type):
+            raise TypeError("The value passed for parameter {0} is not valid! " \
+                            "It must be one of these: {1}".format(name, p_type))
+
+        if isinstance(value, list):
+            for val in value:
+                if isinstance(val, list) or not isinstance(val, p_type):
+                    raise TypeError("A value passed for parameter {0} is not valid. " \
+                                    "It must be one of these: {1}".format(name, p_type))
+        
+    def _set_param(self, name, value):
+        """Do appropriate type casts and utf-8 encode the parameter values"""
+        val = None
+
+        if isinstance(value, bool):
+            val = int(value)
+        elif isinstance(value, datetime):
+            timestamp = value.strftime('%a, %d %b %Y %H:%M:%S').split('.')[0]
+            val = '{0} +0000'.format(timestamp)
+        elif isinstance(value, list):
+            for v in value:
+                self.parameters.append(('{0}[]'.format(name), enc_utf8_str(v)))
+            return
+
+        self.parameters.append((name, enc_utf8_str(val)))
+
+    

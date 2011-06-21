@@ -8,54 +8,61 @@
 #    http://www.apache.org/licenses/LICENSE-2.0.txt 
 
 from datetime import datetime
+from urlparse import urljoin
 
 from posterous.parsers import ModelParser
 from posterous.bind import bind_method
-from posterous.utils import *
 
 
 class API(object):
-    def __init__(self, username=None, password=None, 
-                 host='https://posterous.com', api_root='/api', parser=None):
+    """
+    The API object defines a set of methods that interact with the Posterous API.
+    The methods are defined with various arguments. These arguments are as follows:
+        `path`: `(required)` The API method's endpoint URL
+        `method`: `(optional)` HTTP request method. Use GET `(default)`, POST, or DELETE
+        `payload_type`: The model to use when parsing
+        `parameters`: List of parameters supplied to the call, as found on 
+                      apidocs.posterous.com
+                      Must be formatted as a list of tuples, with the param name being
+                      paired with the expected value type. If more than one type is 
+                      allowed, place the types in a tuple.
+        `auth_type`: The type of authentication used. It can be either None `(default)`,
+                     'basic' or 'token'
+
+    :param username: the user account to authenticate with
+    :param password: the user account password
+    :param parser: the parser for parsing the response payload
+    """
+    def __init__(self, username=None, password=None, parser=None):
         self.username = username
         self.password = password
-        self.host = host
-        self.api_root = api_root
+        self.token = None
+        self.host = 'https://posterous.com'
+        self.api_root = '/api/2'
+        self.api_url = self.host + self.api_root
         self.parser = parser or ModelParser()
 
-    ## API methods 
-    """
-    Required arguments:
-        'path' - The API method's URL path. 
+    def api_token(self):
+        if self.token:
+            return self.token
+        else:
+            self.token = self.get_api_token()
+            return self.token
 
-    The optional arguments available are:
-        'method'        - The HTTP request method to use: "GET", "POST", 
-                          "DELETE" ... Defaults to "GET" if argument 
-                          is not provided.
-        'payload_type'  - The name of the Model class that will retain and 
-                          parse the response data.
-        'payload_list'  - If True, a list of 'payload_type' objects is returned.
-        'response_type' - Determines which parser to use. Set to 'json' if the
-                          response is in JSON format. Defaults to 'xml' if not
-                          specified.
-        'allowed_param' - A list of params that the API method accepts. Must be
-                          formatted as a list of tuples, with the param name
-                          being paired with the expected value type. If more
-                          than one type is allowed, place the types in a tuple.
-        'require_auth'  - True if the API method requires authentication.
-    """
-    
-    ## Reading 
-    """
-    Returns a list of all sites owned and authored by the 
-    authenticated user.
-    """
+    get_api_token = bind_method(
+        path = 'auth/token',
+        payload_type = 'token',
+        auth_type = 'basic'
+    )
+
+    # Reading 
+    # ----------------------------------------
+
+    #: Returns a list of all sites owned and authored by the authenticated user.
     get_sites = bind_method(
-        path = 'getsites',
+        path = 'users/me/sites',
         payload_type = 'site',
-        payload_list = True,
-        allowed_param = [],
-        require_auth = True
+        auth_type = 'token'
     )
 
     """
