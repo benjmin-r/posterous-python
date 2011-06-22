@@ -45,17 +45,6 @@ def enc_utf8_str(arg):
         arg = str(arg)
     return arg
 
-def import_simplejson():
-    try:
-        import simplejson as json
-    except ImportError:
-        try:
-            # they may have django
-            from django.utils import simplejson as json
-        except ImportError:
-            raise ImportError, "Can't load a json library"
-    return json
-
 def basic_authentication(username, password, headers={}):
     def encode_credentials():
         creds = '{0}:{1}'.format(username, password)

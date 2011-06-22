@@ -10,6 +10,7 @@
 from datetime import datetime
 from os.path import join
 from posterous.utils import enc_utf8_str, make_http_request, basic_authentication
+from posterous.error import PosterousAuthError
 
 
 def bind_method(**options):        
@@ -17,6 +18,7 @@ def bind_method(**options):
         method = APIMethod(api, options, args, kwargs)
         return method.execute()
     return _call
+
 
 class APIMethod(object):
     def __init__(self, api, method_options, args, kwargs):
@@ -30,6 +32,7 @@ class APIMethod(object):
         self.method = method_options.get('method', 'GET')
         self.require_auth = method_options.get('require_auth', None)
 
+        # Prepare the parameters before making the call
         self._build_parameters(args, kwargs)
 
     def execute(self):
@@ -53,15 +56,16 @@ class APIMethod(object):
         
         # Apply basic authentication
         if not (self.api.username and self.api.password):
-            raise Exception("This call requires a username and password for " \
-                            "authentication!")
+            raise PosterousAuthError("This call requires a username and password " \
+                                     "for authentication!")
         else:
             basic_authentication(self.api.username, self.api.password, self.headers)
 
         # Apply the API token for additional authentication
         token = self.api.token
         if not token:
-            raise Exception("This call requires an API token for authentication!")
+            raise PosterousAuthError("This call requires an API token for " \
+                                     "authentication!")
         else:
             self._set_authentication_token(token)
 
@@ -78,6 +82,7 @@ class APIMethod(object):
 
             if args:
                 value = args.pop()
+            
             if name in kwargs:
                 if not value:
                     value = kwargs.pop(name)
@@ -92,7 +97,7 @@ class APIMethod(object):
                 p_type = (p_type,)
 
             self._check_type(value, p_type, name)
-            self._set_param(name, value)
+            self._set_param_value(name, value)
         
     def _check_type(self, value, p_type, name):
         """
@@ -108,20 +113,20 @@ class APIMethod(object):
                     raise TypeError("A value passed for parameter {0} is not valid. " \
                                     "It must be one of these: {1}".format(name, p_type))
         
-    def _set_param(self, name, value):
+    def _set_param_value(self, name, value):
         """Do appropriate type casts and utf-8 encode the parameter values"""
-        val = None
-
-        if isinstance(value, bool):
-            val = int(value)
-        elif isinstance(value, datetime):
-            timestamp = value.strftime('%a, %d %b %Y %H:%M:%S').split('.')[0]
-            val = '{0} +0000'.format(timestamp)
-        elif isinstance(value, list):
+        if isinstance(value, list):
             for v in value:
                 self.parameters.append(('{0}[]'.format(name), enc_utf8_str(v)))
-            return
+        else:
+            val = self._format_value(value)
+            self.parameters.append((name, enc_utf8_str(val)))
 
-        self.parameters.append((name, enc_utf8_str(val)))
-
-    
+    def _format_value(self, value):
+        if isinstance(value, bool):
+            return int(value)
+        elif isinstance(value, datetime):
+            timestamp = value.strftime('%a, %d %b %Y %H:%M:%S').split('.')[0]
+            return '{0} +0000'.format(timestamp)
+        else:
+            return value

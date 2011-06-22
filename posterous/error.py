@@ -7,8 +7,8 @@
 #    the terms of the Apache License Version 2.0 available at 
 #    http://www.apache.org/licenses/LICENSE-2.0.txt 
 
-class PosterousError(Exception):
-    """Posterous exception"""
+class PosterousAuthError(Exception):
+    """Posterous exception for improper authentication"""
     def __init__(self, error, code=None):
         self.message = error
         self.error_code = code
