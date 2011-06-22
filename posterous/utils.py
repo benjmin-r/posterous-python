@@ -57,26 +57,29 @@ def import_simplejson():
     return json
 
 def basic_authentication(username, password, headers={}):
-    auth = encode_credentials(username, password)
-    headers['Authorization'] = 'Basic %s'.format(auth)
+    def encode_credentials():
+        creds = '{0}:{1}'.format(username, password)
+        return b64encode(creds.encode('latin-1'))
+    
+    auth = encode_credentials()
+    headers['Authorization'] = 'Basic {0}'.format(auth)
     return headers
 
-def encode_credentials(username, password):
-    creds = '{0}:{1}'.format(username, password)
-    return b64encode(creds.encode('latin-1'))
 
 def make_http_request(url, method="GET", parameters={}, headers={}):
     def encode_params():
-        if not parameters:
-            return
-        if method == 'POST':
-            req_url += '?%s'.format(urllib.urlencode(parameters))
-        elif method == 'GET':
-            post_data = urllib.urlencode(parameters)
+        p_data = None
+        r_url = url
+        if method == 'GET':
+            r_url += '?{0}'.format(urllib.urlencode(parameters))
+        elif method == 'POST':
+            p_data = urllib.urlencode(parameters)
+        return r_url, p_data
 
-    post_data = None
-    req_url = url
-    encode_params()
+    req_url, post_data = encode_params()
+
+    print 'url: %s | post_data: %s' % (req_url, post_data)
+    print 'headers: %s' % headers
 
     # Make the request
     request = urllib2.Request(req_url, post_data, headers)

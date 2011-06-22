@@ -26,43 +26,28 @@ class API(object):
                       Must be formatted as a list of tuples, with the param name being
                       paired with the expected value type. If more than one type is 
                       allowed, place the types in a tuple.
-        `auth_type`: The type of authentication used. It can be either None `(default)`,
-                     'basic' or 'token'
+        `require_auth`: True if the call requires authentication. The default is False
 
-    :param username: the user account to authenticate with
-    :param password: the user account password
+    :param api_token: a user account's API token. This is provided on the Posterous API site.
     :param parser: the parser for parsing the response payload
     """
-    def __init__(self, username=None, password=None, parser=None):
+    def __init__(self, username=None, password=None, api_token=None, parser=None):
         self.username = username
         self.password = password
-        self.token = None
+        self.token = api_token
         self.host = 'https://posterous.com'
         self.api_root = '/api/2'
         self.api_url = self.host + self.api_root
         self.parser = parser or ModelParser()
-
-    def api_token(self):
-        if self.token:
-            return self.token
-        else:
-            self.token = self.get_api_token()
-            return self.token
-
-    get_api_token = bind_method(
-        path = 'auth/token',
-        payload_type = 'token',
-        auth_type = 'basic'
-    )
 
     # Reading 
     # ----------------------------------------
 
     #: Returns a list of all sites owned and authored by the authenticated user.
     get_sites = bind_method(
-        path = 'users/me/sites',
+        path = 'sites',
         payload_type = 'site',
-        auth_type = 'token'
+        require_auth = True
     )
 
     """

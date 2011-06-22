@@ -9,7 +9,7 @@
 
 from datetime import datetime
 from os.path import join
-from posterous.utils import enc_utf8_str, basic_authentication, make_http_request
+from posterous.utils import enc_utf8_str, make_http_request, basic_authentication
 
 
 def bind_method(**options):        
@@ -28,14 +28,13 @@ class APIMethod(object):
         self.payload_type = method_options.get('payload_type', None)
         self.allowed_params = method_options.get('parameters', [])
         self.method = method_options.get('method', 'GET')
-        self.auth_type = method_options.get('auth_type', None)
+        self.require_auth = method_options.get('require_auth', None)
 
         self._build_parameters(args, kwargs)
 
     def execute(self):
-        if self.auth_type:
-            # Apply authentication if required
-            self._check_authentication()
+        # Apply authentication if required
+        self._check_authentication()
 
         try:
             # Make the web request
@@ -44,30 +43,37 @@ class APIMethod(object):
         except Exception, e:
             raise Exception("Failed to send request: {0}".format(e))
 
-        # Return the parsed payload. Will be a model instance if the default parser is used
+        # Return the parsed payload. Will be a model instance if the default 
+        # parser is used
         return self.api.parser.parse(self, resp.read())
 
     def _check_authentication(self):
-        if not (self.api.username and self.api.password):
-            raise Exception("You must supply a username and password for this call!")
+        if not self.require_auth:
+            return
         
-        # Check the auth types
-        if self.auth_type == 'basic':
-            basic_authentication(self.api.username, self.api.password, self.headers)
-        elif self.auth_type == 'token':
-            token = self.api.api_token()    
-            self.allowed_params['api_token'] = token
+        # Apply basic authentication
+        if not (self.api.username and self.api.password):
+            raise Exception("This call requires a username and password for " \
+                            "authentication!")
         else:
-            raise Exception("The authentication type '{0}' is not " \
-                            "supported!".format(self.auth_type))
+            basic_authentication(self.api.username, self.api.password, self.headers)
+
+        # Apply the API token for additional authentication
+        token = self.api.token
+        if not token:
+            raise Exception("This call requires an API token for authentication!")
+        else:
+            self._set_authentication_token(token)
+
+    def _set_authentication_token(self, token):
+        self.parameters.append(('api_token', enc_utf8_str(token)))
 
     def _build_parameters(self, args, kwargs):
         self.parameters = []
-        
         args = list(args)
         args.reverse()
 
-        for name, p_type in self.parameters:
+        for name, p_type in self.allowed_params:
             value = None
 
             if args:
