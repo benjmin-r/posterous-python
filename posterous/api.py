@@ -28,9 +28,9 @@ class API(object):
                       allowed, place the types in a tuple.
         `require_auth`: True if the call requires authentication. The default is False
 
-    :param username: the Posterous user account to authenticate with 
+    :param username: the Posterous user account to act upon 
     :param password: the password for the authenticating account
-    :param api_token: a user account's API token. This is provided on the Posterous API site.
+    :param api_token: your API token. This is provided on the Posterous API site.
     :param parser: the parser for parsing the response payload
     """
     def __init__(self, username=None, password=None, api_token=None, parser=None):
